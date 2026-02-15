@@ -38,11 +38,15 @@ func (tx *Transaction) Sign(priv *ecdsa.PrivateKey) {
 
 func (tx *Transaction) Verify() bool {
 	if tx.From == "SYSTEM" {
-		return true // block reward
+		return true
 	}
 
 	sigBytes, _ := hex.DecodeString(tx.Signature)
 	pubBytes, _ := hex.DecodeString(tx.PubKey)
+
+	if len(sigBytes) == 0 || len(pubBytes) == 0 {
+		return false
+	}
 
 	r := big.Int{}
 	s := big.Int{}
