@@ -4,84 +4,41 @@ import (
 	"fmt"
 
 	"github.com/whytegod/wgd-core/core"
-	"github.com/whytegod/wgd-core/genesis"
-	"github.com/whytegod/wgd-core/ledger"
-)
-
-const (
-	ProtocolName    = "Whytegod"
-	ProtocolVersion = "v0.2.0"
 )
 
 func main() {
 
-	// ----------------------------------
-	// 1️⃣ Load Genesis Configuration
-	// ----------------------------------
-	cfg := genesis.DefaultGenesis()
-
-	// ----------------------------------
-	// 2️⃣ Initialize Ledger
-	// ----------------------------------
-	ldg := ledger.NewLedger(cfg.InitialSupply)
-
-	// ----------------------------------
-	// 3️⃣ Initialize Blockchain
-	// ----------------------------------
+	// Create blockchain
 	chain := core.NewBlockchain()
 
-	// ----------------------------------
-	// 4️⃣ Boot Information
-	// ----------------------------------
-	fmt.Println("===================================")
-	fmt.Println("Protocol:", ProtocolName)
-	fmt.Println("Version :", ProtocolVersion)
-	fmt.Println("Initial Supply:", ldg.TotalSupply(), "WGD")
-	fmt.Println("Treasury Balance:", ldg.BalanceOf("treasury"), "WGD")
-	fmt.Println("===================================")
+	// Create wallets
+	walletA := core.NewWallet()
+	walletB := core.NewWallet()
 
-	// ----------------------------------
-	// 5️⃣ Create Transaction
-	// ----------------------------------
-	tx1 := core.Transaction{
-		From:   "treasury",
-		To:     "alice",
-		Amount: 1000,
+	// Create transaction
+	tx := core.Transaction{
+		From:   walletA.PublicKey,
+		To:     walletB.PublicKey,
+		Amount: 10,
 	}
 
-	// ----------------------------------
-	// 6️⃣ Apply Transaction to Ledger
-	// ----------------------------------
-	err := ldg.Transfer(tx1.From, tx1.To, tx1.Amount)
-	if err != nil {
-		fmt.Println("Transaction failed:", err)
-		return
-	}
+	tx.Sign(walletA.PrivateKey)
 
-	// ----------------------------------
-	// 7️⃣ Add Transaction to Blockchain
-	// ----------------------------------
-	chain.AddBlock([]core.Transaction{tx1})
+	// Add transaction to mempool
+	chain.AddTransaction(tx)
 
-	// ----------------------------------
-	// 8️⃣ Display Updated Ledger State
-	// ----------------------------------
-	fmt.Println("\n--- Ledger State ---")
-	fmt.Println("Treasury:", ldg.BalanceOf("treasury"), "WGD")
-	fmt.Println("Alice   :", ldg.BalanceOf("alice"), "WGD")
+	// Mine block
+	chain.MineBlock(walletA.PublicKey)
 
-	// ----------------------------------
-	// 9️⃣ Display Blockchain
-	// ----------------------------------
-	fmt.Println("\n--- Blockchain ---")
+	// Print blockchain
 	for _, block := range chain.Blocks {
-		fmt.Println("Block Index:", block.Index)
-		fmt.Println("Timestamp  :", block.Timestamp)
-		fmt.Println("Hash       :", block.Hash)
-		fmt.Println("PrevHash   :", block.PrevHash)
-		fmt.Println("Tx Count   :", len(block.Transactions))
-		fmt.Println("-----------------------------")
+		fmt.Println("=================================")
+		fmt.Println("Block:", block.Index)
+		fmt.Println("Hash:", block.Hash)
+		fmt.Println("PrevHash:", block.PrevHash)
+		fmt.Println("Transactions:", block.Transactions)
 	}
 
-	fmt.Println("\nNode shutdown complete.")
+	// Save chain
+	chain.SaveToFile("whytegod_chain.json")
 }
