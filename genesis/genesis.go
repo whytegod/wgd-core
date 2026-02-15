@@ -1,25 +1,17 @@
 package genesis
 
-type GenesisConfig struct {
-	InitialSupply        uint64
-	AsymptoticSupplyCap  uint64
-	InitialBlockReward   uint64
-	DecayConstant        float64
-	MicroTailEmission    uint64
-	MinValidatorStake    uint64
-	EpochLength          uint64
-	CheckpointInterval   uint64
+type Config struct {
+	InitialSupply        float64
+	AsymptoticSupplyCap  float64
+	BlockReward          float64
+	HalvingInterval      int
 }
 
-func DefaultGenesis() GenesisConfig {
-	return GenesisConfig{
-		InitialSupply:       1_000_000_000,
-		AsymptoticSupplyCap: 10_000_000_000,
-		InitialBlockReward:  50,
-		DecayConstant:       0.0001,
-		MicroTailEmission:   1,
-		MinValidatorStake:   10_000,
-		EpochLength:         100,
-		CheckpointInterval:  500,
+func DefaultGenesis() Config {
+	return Config{
+		InitialSupply:       0,
+		AsymptoticSupplyCap: 21000000,
+		BlockReward:         50,
+		HalvingInterval:     210000,
 	}
 }
