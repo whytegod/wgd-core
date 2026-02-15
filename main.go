@@ -2,44 +2,22 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/whytegod/wgd-core/core"
-	"github.com/whytegod/wgd-core/genesis"
+	"wgd-core/ledger"
 )
-
-const ProtocolName = "Whytegod"
-const ProtocolVersion = "v0.1.0"
 
 func main() {
 
-	// Load Genesis Configuration
-	cfg := genesis.DefaultGenesis()
+	chain := ledger.NewBlockchain()
 
-	fmt.Println("===================================")
-	fmt.Println("Starting", ProtocolName, ProtocolVersion)
-	fmt.Println("Initial Supply:", cfg.InitialSupply, "WGD")
-	fmt.Println("Supply Cap:", cfg.AsymptoticSupplyCap, "WGD")
-	fmt.Println("===================================")
+	fmt.Println("====================================")
+	fmt.Println("Whytegod Blockchain Started")
+	fmt.Println("Current Supply:", chain.TotalSupply, "WGD")
+	fmt.Println("Blocks:", len(chain.Blocks))
+	fmt.Println("====================================")
 
-	// Initialize Blockchain
-	chain := core.NewBlockchain()
+	chain.MineBlock("First real mined block")
 
-	fmt.Println("Blockchain initialized")
-	fmt.Println("Genesis Block Created")
-
-	// Add Blocks
-	chain.AddBlock("First transaction", 50.0)
-	chain.AddBlock("Second transaction", 45.0)
-	chain.AddBlock("Third transaction", 40.0)
-
-	// Print All Blocks
-	for _, block := range chain.Blocks {
-		fmt.Println("---------------")
-		fmt.Println("Index:", block.Index)
-		fmt.Println("Timestamp:", block.Timestamp)
-		fmt.Println("Data:", block.Data)
-		fmt.Println("PrevHash:", block.PrevHash)
-		fmt.Println("Hash:", block.Hash)
-		fmt.Println("Reward:", block.Reward)
-	}
+	fmt.Println("After Mining:")
+	fmt.Println("Current Supply:", chain.TotalSupply, "WGD")
+	fmt.Println("Blocks:", len(chain.Blocks))
 }
