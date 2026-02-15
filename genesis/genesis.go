@@ -1,17 +1,15 @@
 package genesis
 
-type Config struct {
-	InitialSupply        float64
-	AsymptoticSupplyCap  float64
-	BlockReward          float64
-	HalvingInterval      int
+// GenesisConfig defines the initial monetary configuration
+type GenesisConfig struct {
+	InitialSupply       float64
+	AsymptoticSupplyCap float64
 }
 
-func DefaultGenesis() Config {
-	return Config{
-		InitialSupply:       0,
-		AsymptoticSupplyCap: 21000000,
-		BlockReward:         50,
-		HalvingInterval:     210000,
+// DefaultGenesis returns Whytegod's platinum standard genesis configuration
+func DefaultGenesis() GenesisConfig {
+	return GenesisConfig{
+		InitialSupply:       9720000.0,  // 9.72 million WGD initial issuance
+		AsymptoticSupplyCap: 12000000.0, // 12 million asymptotic cap
 	}
 }
