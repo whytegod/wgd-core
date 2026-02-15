@@ -86,9 +86,13 @@ func (l *Ledger) TreasuryBalance() float64 {
 	return l.balances["treasury"]
 }
 
+/*
+   Print Full Chain
+*/
+
 func (l *Ledger) PrintChain() {
 	for _, block := range l.blocks {
-		fmt.Println("-------------")
+		fmt.Println("--------------------------------")
 		fmt.Println("Block:", block.Index)
 		fmt.Println("Time:", block.Timestamp)
 		fmt.Println("Data:", block.Data)
