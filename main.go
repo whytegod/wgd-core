@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"wgd-core/genesis"
+	"github.com/whytegod/wgd-core/genesis"
 )
 
 const ProtocolName = "Whytegod"
