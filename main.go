@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"wgd-core/ledger"
+	"github.com/whytegod/wgd-core/ledger"
 )
 
 const ProtocolName = "Whytegod"
@@ -20,16 +20,4 @@ func main() {
 	fmt.Println("Genesis Loaded")
 	fmt.Println("Height:", chain.Height())
 	fmt.Println("Supply:", chain.TotalSupply())
-
-	// Mine blocks
-	chain.AddBlock("First transaction batch")
-	chain.AddBlock("Second transaction batch")
-
-	fmt.Println("\nAfter Mining:")
-	fmt.Println("Height:", chain.Height())
-	fmt.Println("Supply:", chain.TotalSupply())
-	fmt.Println("Treasury:", chain.TreasuryBalance())
-
-	fmt.Println("\nFull Chain:")
-	chain.PrintChain()
 }
