@@ -7,7 +7,7 @@ import (
 )
 
 const ProtocolName = "Whytegod"
-const ProtocolVersion = "v0.1.0"
+const ProtocolVersion = "v0.2.0"
 
 func main() {
 
@@ -15,9 +15,21 @@ func main() {
 	fmt.Println("Starting", ProtocolName, ProtocolVersion)
 	fmt.Println("===================================")
 
-	chain := ledger.NewLedger(9720000)
+	chain := ledger.NewLedger(9720000, 50)
 
-	fmt.Println("Genesis Block Created")
-	fmt.Println("Total Supply:", chain.TotalSupply())
-	fmt.Println("Block Height:", 1)
+	fmt.Println("Genesis Loaded")
+	fmt.Println("Height:", chain.Height())
+	fmt.Println("Supply:", chain.TotalSupply())
+
+	// Mine blocks
+	chain.AddBlock("First transaction batch")
+	chain.AddBlock("Second transaction batch")
+
+	fmt.Println("\nAfter Mining:")
+	fmt.Println("Height:", chain.Height())
+	fmt.Println("Supply:", chain.TotalSupply())
+	fmt.Println("Treasury:", chain.TreasuryBalance())
+
+	fmt.Println("\nFull Chain:")
+	chain.PrintChain()
 }
