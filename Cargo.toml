@@ -1,10 +1,6 @@
 [package]
-name = "wgd"
+name = "wgd-core"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sha2 = "0.10"
-blake3 = "1.5"
-tiny-keccak = "2.0"
-hex = "0.4"
