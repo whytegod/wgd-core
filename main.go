@@ -2,8 +2,22 @@ package main
 
 import (
 	"fmt"
+
+	"wgd-core/ledger"
 )
 
+const ProtocolName = "Whytegod"
+const ProtocolVersion = "v0.1.0"
+
 func main() {
-	fmt.Println("Whytegod Core Is Now Clean")
+
+	fmt.Println("===================================")
+	fmt.Println("Starting", ProtocolName, ProtocolVersion)
+	fmt.Println("===================================")
+
+	chain := ledger.NewBlockchain()
+
+	fmt.Println("Genesis Block Created")
+	fmt.Println("Current Supply:", chain.TotalSupply, "WGD")
+	fmt.Println("Block Height:", len(chain.Blocks))
 }
