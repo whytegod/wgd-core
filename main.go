@@ -13,7 +13,7 @@ func main() {
 
 	fmt.Println("Node initialized successfully.")
 }
- 
+
 func printBanner() {
 	fmt.Println("======================================")
 	fmt.Printf("  %s %s\n", ProtocolName, ProtocolVersion)
