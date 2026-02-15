@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -13,28 +14,43 @@ type Block struct {
 	Transactions []Transaction
 	PrevHash     string
 	Hash         string
+	Nonce        int
 }
 
 func (b *Block) CalculateHash() string {
-	record := fmt.Sprintf("%d%s%v%s",
+	record := fmt.Sprintf("%d%s%v%s%d",
 		b.Index,
 		b.Timestamp,
 		b.Transactions,
 		b.PrevHash,
+		b.Nonce,
 	)
 
-	h := sha256.Sum256([]byte(record))
-	return hex.EncodeToString(h[:])
+	hash := sha256.Sum256([]byte(record))
+	return hex.EncodeToString(hash[:])
 }
 
-func NewBlock(index int, txs []Transaction, prevHash string) Block {
+func (b *Block) Mine(difficulty int) {
+	target := strings.Repeat("0", difficulty)
+
+	for {
+		b.Hash = b.CalculateHash()
+		if strings.HasPrefix(b.Hash, target) {
+			break
+		}
+		b.Nonce++
+	}
+}
+
+func NewBlock(index int, txs []Transaction, prevHash string, difficulty int) Block {
 	block := Block{
 		Index:        index,
 		Timestamp:    time.Now().String(),
 		Transactions: txs,
 		PrevHash:     prevHash,
+		Nonce:        0,
 	}
 
-	block.Hash = block.CalculateHash()
+	block.Mine(difficulty)
 	return block
 }
