@@ -1,31 +1,113 @@
-mod state;
-mod consensus;
+mod hash;
 
-use state::State;
-use consensus::{Consensus, MAX_SUPPLY};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-fn main() {
-    let mut state = State::new();
+const MAX_SUPPLY: u64 = 9_720_000;          // 9,720,000 WGD fixed supply
+const WERTS_PER_WGD: u64 = 100_000_000;     // Smallest unit = WERT
 
-    // Initial reward: 50 WGD (8 decimals like BTC style)
-    let initial_reward: u128 = 50 * 100_000_000;
+#[derive(Clone)]
+struct Block {
+    index: u64,
+    timestamp: u128,
+    data: String,
+    previous_hash: String,
+    nonce: u64,
+    hash: String,
+}
 
-    let mut consensus = Consensus::new(initial_reward);
+impl Block {
+    fn new(index: u64, data: String, previous_hash: String) -> Self {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
 
-    let miner_address = "WGD_MINER_001";
+        let mut nonce = 0;
 
-    // Simulate 5 blocks
-    for _ in 0..5 {
-        match consensus.produce_block(&mut state, miner_address) {
-            Ok(_) => {
-                println!("Block {} mined successfully", consensus.block_height);
+        let hash = loop {
+            let block_data = format!("{}{}{}{}{}", index, timestamp, data, previous_hash, nonce);
+            let result = hash::wgd_x_hash(block_data.as_bytes(), nonce);
+
+            if result.starts_with("0000") {   // Difficulty level
+                break result;
             }
-            Err(e) => {
-                println!("Block rejected: {}", e);
-            }
+
+            nonce += 1;
+        };
+
+        Block {
+            index,
+            timestamp,
+            data,
+            previous_hash,
+            nonce,
+            hash,
+        }
+    }
+}
+
+struct Blockchain {
+    chain: Vec<Block>,
+    circulating_supply: u64,
+}
+
+impl Blockchain {
+    fn new() -> Self {
+        let genesis = Block::new(0, "Genesis Block - Digital Platinum".into(), "0".into());
+
+        Blockchain {
+            chain: vec![genesis],
+            circulating_supply: 0,
         }
     }
 
-    println!("Total Supply: {}", state.total_supply);
-    println!("Max Supply: {}", MAX_SUPPLY);
+    fn add_block(&mut self, data: String) {
+        let previous_block = self.chain.last().unwrap();
+        let new_block = Block::new(
+            previous_block.index + 1,
+            data,
+            previous_block.hash.clone(),
+        );
+
+        self.chain.push(new_block);
+    }
+
+    fn mint(&mut self, amount_wgd: u64) {
+        if self.circulating_supply + amount_wgd > MAX_SUPPLY {
+            println!("❌ Cannot mint beyond fixed supply of {} WGD", MAX_SUPPLY);
+        } else {
+            self.circulating_supply += amount_wgd;
+            println!("✅ Minted {} WGD", amount_wgd);
+            println!("💎 Circulating Supply: {} / {}", self.circulating_supply, MAX_SUPPLY);
+        }
+    }
+
+    fn print_chain(&self) {
+        for block in &self.chain {
+            println!("-------------------------------");
+            println!("Index: {}", block.index);
+            println!("Timestamp: {}", block.timestamp);
+            println!("Data: {}", block.data);
+            println!("Nonce: {}", block.nonce);
+            println!("Hash: {}", block.hash);
+            println!("Previous Hash: {}", block.previous_hash);
+        }
+    }
+}
+
+fn main() {
+    println!("🚀 WGD CORE — DIGITAL PLATINUM");
+    println!("Fixed Supply: {} WGD", MAX_SUPPLY);
+    println!("Smallest Unit: 1 WGD = {} WERTS", WERTS_PER_WGD);
+    println!("----------------------------------");
+
+    let mut blockchain = Blockchain::new();
+
+    blockchain.mint(1_000_000);
+    blockchain.add_block("First Transaction".into());
+
+    blockchain.mint(500_000);
+    blockchain.add_block("Second Transaction".into());
+
+    blockchain.print_chain();
 }
