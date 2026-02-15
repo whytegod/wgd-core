@@ -24,4 +24,4 @@ impl Blockchain {
     pub fn latest_hash(&self) -> String {
         self.chain.last().unwrap().hash.clone()
     }
-}
+} 
