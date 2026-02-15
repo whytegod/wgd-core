@@ -1,30 +1,25 @@
-use sha2::{Digest as Sha2Digest, Sha256};
-use sha3::{Digest as Sha3Digest, Sha3_256};
-use blake3;
+mod block;
+mod blockchain;
+mod mining;
+
+use blockchain::Blockchain;
+use block::Block;
 
 fn main() {
-    let data = b"WGD - Digital Platinum";
+    println!("WGD Core Node Starting...");
 
-    // ---------------- SHA256 ----------------
-    let mut sha256 = Sha256::new();
-    sha256.update(data);
-    let hash_sha256 = sha256.finalize();
+    let mut blockchain = Blockchain::new();
 
-    // ---------------- SHA3-256 ----------------
-    let mut sha3 = Sha3_256::new();
-    sha3.update(data);
-    let hash_sha3 = sha3.finalize();
+    println!("Mining block 1...");
+    let block1 = Block::new(
+        1,
+        "First WGD block".to_string(),
+        blockchain.latest_hash(),
+    );
 
-    // ---------------- BLAKE3 ----------------
-    let hash_blake3 = blake3::hash(data);
+    let mined_block = mining::mine_block(block1, 4);
 
-    println!("----------------------------------------");
-    println!("WGD Core Hash Engine");
-    println!("----------------------------------------");
+    blockchain.add_block(mined_block);
 
-    println!("SHA256   : {:x}", hash_sha256);
-    println!("SHA3-256 : {:x}", hash_sha3);
-    println!("BLAKE3   : {}", hash_blake3.to_hex());
-
-    println!("----------------------------------------");
+    println!("Blockchain length: {}", blockchain.chain.len());
 }
