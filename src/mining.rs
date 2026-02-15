@@ -10,4 +10,4 @@ pub fn mine_block(mut block: Block, difficulty: usize) -> Block {
 
     println!("Block mined: {}", block.hash);
     block
-}
+} 
