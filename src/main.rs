@@ -2,8 +2,9 @@ mod hash;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const MAX_SUPPLY: u64 = 9_720_000;          // 9,720,000 WGD fixed supply
-const WERTS_PER_WGD: u64 = 100_000_000;     // Smallest unit = WERT
+const MAX_SUPPLY_WGD: u64 = 9_720_000;
+const WERTS_PER_WGD: u64 = 100_000_000;
+const MAX_SUPPLY: u64 = MAX_SUPPLY_WGD * WERTS_PER_WGD;
 
 #[derive(Clone)]
 struct Block {
@@ -28,8 +29,8 @@ impl Block {
             let block_data = format!("{}{}{}{}{}", index, timestamp, data, previous_hash, nonce);
             let result = hash::wgd_x_hash(block_data.as_bytes(), nonce);
 
-            if result.starts_with("0000") {   // Difficulty level
-                break result;
+            if result[0] == 0 && result[1] == 0 {
+                break hex::encode(result);
             }
 
             nonce += 1;
@@ -63,6 +64,7 @@ impl Blockchain {
 
     fn add_block(&mut self, data: String) {
         let previous_block = self.chain.last().unwrap();
+
         let new_block = Block::new(
             previous_block.index + 1,
             data,
@@ -70,44 +72,58 @@ impl Blockchain {
         );
 
         self.chain.push(new_block);
+
+        self.mine_reward();
+        self.burn(1_000_000); // Burn 0.01 WGD per block
     }
 
-    fn mint(&mut self, amount_wgd: u64) {
-        if self.circulating_supply + amount_wgd > MAX_SUPPLY {
-            println!("❌ Cannot mint beyond fixed supply of {} WGD", MAX_SUPPLY);
-        } else {
-            self.circulating_supply += amount_wgd;
-            println!("✅ Minted {} WGD", amount_wgd);
-            println!("💎 Circulating Supply: {} / {}", self.circulating_supply, MAX_SUPPLY);
+    fn mine_reward(&mut self) {
+        let halvings = self.chain.len() / 100;
+
+        let mut reward: u64 = 50 * WERTS_PER_WGD;
+
+        for _ in 0..halvings {
+            reward /= 2;
         }
+
+        if reward == 0 {
+            println!("⚠️ Mining rewards exhausted.");
+            return;
+        }
+
+        if self.circulating_supply + reward > MAX_SUPPLY {
+            println!("❌ Max supply reached.");
+            return;
+        }
+
+        self.circulating_supply += reward;
+
+        println!("⛏️ Block Reward: {} Werts", reward);
+        println!("💎 Circulating Supply: {}", self.circulating_supply);
+        println!("📦 Max Supply: {}", MAX_SUPPLY);
     }
 
-    fn print_chain(&self) {
-        for block in &self.chain {
-            println!("-------------------------------");
-            println!("Index: {}", block.index);
-            println!("Timestamp: {}", block.timestamp);
-            println!("Data: {}", block.data);
-            println!("Nonce: {}", block.nonce);
-            println!("Hash: {}", block.hash);
-            println!("Previous Hash: {}", block.previous_hash);
+    fn burn(&mut self, amount: u64) {
+        if self.circulating_supply >= amount {
+            self.circulating_supply -= amount;
+            println!("🔥 Burned {} Werts", amount);
+            println!("💎 New Circulating Supply: {}", self.circulating_supply);
         }
     }
 }
 
 fn main() {
     println!("🚀 WGD CORE — DIGITAL PLATINUM");
-    println!("Fixed Supply: {} WGD", MAX_SUPPLY);
-    println!("Smallest Unit: 1 WGD = {} WERTS", WERTS_PER_WGD);
+    println!("Max Supply: {} WGD", MAX_SUPPLY_WGD);
+    println!("1 WGD = {} WERTS", WERTS_PER_WGD);
     println!("----------------------------------");
 
     let mut blockchain = Blockchain::new();
 
-    blockchain.mint(1_000_000);
-    blockchain.add_block("First Transaction".into());
+    for i in 1..=5 {
+        blockchain.add_block(format!("Block {}", i));
+    }
 
-    blockchain.mint(500_000);
-    blockchain.add_block("Second Transaction".into());
-
-    blockchain.print_chain();
+    println!("----------------------------------");
+    println!("Final Circulating Supply: {}", blockchain.circulating_supply);
 }
