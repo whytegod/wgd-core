@@ -15,9 +15,9 @@ func main() {
 	fmt.Println("Starting", ProtocolName, ProtocolVersion)
 	fmt.Println("===================================")
 
-	chain := ledger.NewBlockchain()
+	chain := ledger.NewLedger(9720000)
 
 	fmt.Println("Genesis Block Created")
-	fmt.Println("Current Supply:", chain.TotalSupply, "WGD")
-	fmt.Println("Block Height:", len(chain.Blocks))
+	fmt.Println("Total Supply:", chain.TotalSupply())
+	fmt.Println("Block Height:", 1)
 }
