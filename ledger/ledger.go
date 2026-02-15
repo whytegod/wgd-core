@@ -1,29 +1,39 @@
 package ledger
 
-import "github.com/whytegod/wgd-core/block"
+import "fmt"
 
 type Ledger struct {
-	Blocks []block.Block
+	totalSupply float64
+	balances    map[string]float64
 }
 
-func NewLedger() *Ledger {
-	return &Ledger{
-		Blocks: []block.Block{},
+func NewLedger(initialSupply float64) *Ledger {
+	l := &Ledger{
+		totalSupply: initialSupply,
+		balances:    make(map[string]float64),
 	}
+
+	// Assign all genesis supply to treasury
+	l.balances["treasury"] = initialSupply
+
+	return l
 }
 
-func (l *Ledger) AddBlock(b block.Block) {
-	l.Blocks = append(l.Blocks, b)
+func (l *Ledger) BalanceOf(account string) float64 {
+	return l.balances[account]
 }
 
-func (l *Ledger) Height() int {
-	return len(l.Blocks) - 1
+func (l *Ledger) Transfer(from, to string, amount float64) error {
+	if l.balances[from] < amount {
+		return fmt.Errorf("insufficient balance")
+	}
+
+	l.balances[from] -= amount
+	l.balances[to] += amount
+
+	return nil
 }
 
 func (l *Ledger) TotalSupply() float64 {
-	total := 0.0
-	for _, b := range l.Blocks {
-		total += b.Reward
-	}
-	return total
+	return l.totalSupply
 }
