@@ -8,70 +8,65 @@ const INITIAL_REWARD_WGD: u64 = 50;
 const HALVING_INTERVAL: u64 = 100;
 const BURN_PER_BLOCK: u64 = 1_000_000; // 0.01 WGD
 
-#[derive(Clone)]
+#[derive(Debug)]
 struct Block {
-    index: u64,
+    height: u64,
     timestamp: u128,
-    nonce: u64,
 }
 
 struct Blockchain {
-    chain: Vec<Block>,
+    blocks: Vec<Block>,
     circulating_supply: u64,
 }
 
 impl Blockchain {
     fn new() -> Self {
         let genesis = Block {
-            index: 0,
+            height: 0,
             timestamp: current_time(),
-            nonce: 0,
         };
 
         Self {
-            chain: vec![genesis],
+            blocks: vec![genesis],
             circulating_supply: 0,
         }
     }
 
-    fn add_block(&mut self) {
-        let index = self.chain.len() as u64;
+    fn mine_block(&mut self) {
+        let height = self.blocks.len() as u64;
 
         let block = Block {
-            index,
+            height,
             timestamp: current_time(),
-            nonce: 0,
         };
 
-        self.chain.push(block);
+        self.blocks.push(block);
 
-        self.apply_reward();
-        self.apply_burn();
+        let reward = self.calculate_reward(height);
 
-        println!("⛏ Block {} mined", index);
+        if self.circulating_supply + reward <= MAX_SUPPLY {
+            self.circulating_supply += reward;
+        }
+
+        if self.circulating_supply >= BURN_PER_BLOCK {
+            self.circulating_supply -= BURN_PER_BLOCK;
+        }
+
+        println!("⛏ Block {} mined", height);
+        println!("Reward: {} WERTS", reward);
         println!("Circulating Supply: {}", self.circulating_supply);
         println!("----------------------------------");
     }
 
-    fn apply_reward(&mut self) {
-        let halvings = self.chain.len() as u64 / HALVING_INTERVAL;
+    fn calculate_reward(&self, height: u64) -> u64 {
+        let halvings = height / HALVING_INTERVAL;
         let mut reward = INITIAL_REWARD_WGD * WERTS_PER_WGD;
 
         for _ in 0..halvings {
             reward /= 2;
         }
 
-        if self.circulating_supply + reward <= MAX_SUPPLY {
-            self.circulating_supply += reward;
-        } else {
-            println!("❌ Max supply reached");
-        }
-    }
-
-    fn apply_burn(&mut self) {
-        if self.circulating_supply >= BURN_PER_BLOCK {
-            self.circulating_supply -= BURN_PER_BLOCK;
-        }
+        reward
     }
 }
 
@@ -83,6 +78,7 @@ fn current_time() -> u128 {
 }
 
 fn main() {
+    println!("==================================");
     println!("WGD CORE — Digital Platinum");
     println!("Max Supply: {} WGD", MAX_SUPPLY_WGD);
     println!("1 WGD = {} WERTS", WERTS_PER_WGD);
@@ -91,8 +87,8 @@ fn main() {
     let mut blockchain = Blockchain::new();
 
     for _ in 0..5 {
-        blockchain.add_block();
+        blockchain.mine_block();
     }
 
-    println!("Final Supply: {}", blockchain.circulating_supply);
+    println!("Final Circulating Supply: {}", blockchain.circulating_supply);
 }
