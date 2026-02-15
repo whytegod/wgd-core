@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/hex"
 )
 
 type Wallet struct {
@@ -18,6 +19,6 @@ func NewWallet() *Wallet {
 
 	return &Wallet{
 		PrivateKey: priv,
-		PublicKey:  string(pub),
+		PublicKey:  hex.EncodeToString(pub),
 	}
 }
