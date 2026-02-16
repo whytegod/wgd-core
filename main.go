@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/whytegod/wgd-core/core"
 )
 
@@ -12,17 +13,17 @@ func main() {
 	tx := core.Transaction{
 		From:   "Alice",
 		To:     "Bob",
-		Amount: 10,
+		Amount: 50,
 	}
 
 	bc.AddTransaction(tx)
-	bc.MineBlock("Miner1")
+	bc.MineBlock("WhytegodMiner")
 
 	for _, block := range bc.Blocks {
-		fmt.Println("Block:", block.Index)
-		fmt.Println("Prev Hash:", block.PrevHash)
+		fmt.Println("Index:", block.Index)
+		fmt.Println("Previous Hash:", block.PrevHash)
 		fmt.Println("Hash:", block.Hash)
 		fmt.Println("Transactions:", block.Transactions)
-		fmt.Println("--------------------")
+		fmt.Println("-------------------------")
 	}
 }
