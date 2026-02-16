@@ -2,13 +2,6 @@ package core
 
 import "fmt"
 
-type Block struct {
-	Index        int
-	Transactions []Transaction
-	PrevHash     string
-	Hash         string
-}
-
 type Blockchain struct {
 	Blocks      []Block
 	Mempool     []Transaction
