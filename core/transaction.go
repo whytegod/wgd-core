@@ -26,10 +26,7 @@ func (tx *Transaction) Sign(signature []byte, pubKey []byte) {
 }
 
 func (tx *Transaction) Verify() bool {
-	if len(tx.Signature) == 0 || len(tx.PubKey) == 0 {
-		return false
-	}
-	return true
+	return len(tx.Signature) > 0 && len(tx.PubKey) > 0
 }
 
 func (tx *Transaction) Print() {
