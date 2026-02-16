@@ -51,4 +51,4 @@ func (bc *Blockchain) MineBlock(miner string) {
 	bc.Mempool = []Transaction{}
 
 	fmt.Println("Block mined successfully")
-}
+} 
