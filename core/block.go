@@ -3,31 +3,55 @@ package core
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
+	"strings"
 	"time"
 )
 
 type Block struct {
 	Index        int
 	Timestamp    string
-	Data         string
+	Transactions []Transaction
 	PrevHash     string
 	Hash         string
+	Nonce        int
 }
 
-func calculateHash(block Block) string {
-	record := string(block.Index) + block.Timestamp + block.Data + block.PrevHash
+func (b *Block) calculateHash() string {
+	record := strconv.Itoa(b.Index) +
+		b.Timestamp +
+		b.PrevHash +
+		strconv.Itoa(b.Nonce)
+
+	for _, tx := range b.Transactions {
+		record += tx.Hash
+	}
+
 	hash := sha256.Sum256([]byte(record))
 	return hex.EncodeToString(hash[:])
 }
 
-func NewBlock(index int, data string, prevHash string) Block {
+func (b *Block) Mine(difficulty int) {
+	target := strings.Repeat("0", difficulty)
+
+	for {
+		b.Hash = b.calculateHash()
+		if b.Hash[:difficulty] == target {
+			break
+		}
+		b.Nonce++
+	}
+}
+
+func NewBlock(index int, txs []Transaction, prevHash string, difficulty int) Block {
 	block := Block{
-		Index:     index,
-		Timestamp: time.Now().String(),
-		Data:      data,
-		PrevHash:  prevHash,
+		Index:        index,
+		Timestamp:    time.Now().String(),
+		Transactions: txs,
+		PrevHash:     prevHash,
+		Nonce:        0,
 	}
 
-	block.Hash = calculateHash(block)
+	block.Mine(difficulty)
 	return block
 }
