@@ -1,39 +1,67 @@
 package core
 
+import (
+	"fmt"
+)
+
 type Blockchain struct {
-	Blocks     []Block
+	Blocks     []*Block
+	Mempool    []*Transaction
 	Difficulty int
-	Mempool    []Transaction
 }
 
 func NewBlockchain() *Blockchain {
-	genesis := Block{
-		Index:     0,
-		Timestamp: "Genesis",
-		Hash:      "0000genesis",
-	}
+	genesis := CreateGenesisBlock()
 
 	return &Blockchain{
-		Blocks:     []Block{genesis},
-		Difficulty: 3,
-		Mempool:    []Transaction{},
+		Blocks:     []*Block{genesis},
+		Mempool:    []*Transaction{},
+		Difficulty: 2,
 	}
 }
 
-func (bc *Blockchain) AddTransaction(tx Transaction) {
+func CreateGenesisBlock() *Block {
+	coinbase := NewCoinbaseTx("genesis-address", 50)
+	return NewBlock(0, []*Transaction{coinbase}, []byte{}, 2)
+}
+
+func (bc *Blockchain) AddTransaction(tx *Transaction) {
 	bc.Mempool = append(bc.Mempool, tx)
 }
 
-func (bc *Blockchain) MinePendingTransactions() {
-	prev := bc.Blocks[len(bc.Blocks)-1]
+func (bc *Blockchain) MineBlock(minerAddress string) {
+	coinbase := NewCoinbaseTx(minerAddress, 50)
+
+	txs := []*Transaction{coinbase}
+	txs = append(txs, bc.Mempool...)
+
+	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 
 	newBlock := NewBlock(
-		prev.Index+1,
-		bc.Mempool,
-		prev.Hash,
+		prevBlock.Index+1,
+		txs,
+		prevBlock.Hash,
 		bc.Difficulty,
 	)
 
 	bc.Blocks = append(bc.Blocks, newBlock)
-	bc.Mempool = []Transaction{}
+	bc.Mempool = []*Transaction{}
+
+	fmt.Println("New block added to Whytegod (WGD) chain")
+}
+
+func (bc *Blockchain) IsValid() bool {
+	for i := 1; i < len(bc.Blocks); i++ {
+		current := bc.Blocks[i]
+		prev := bc.Blocks[i-1]
+
+		if string(current.PrevHash) != string(prev.Hash) {
+			return false
+		}
+
+		if string(current.Hash) != string(current.HashBlock()) {
+			return false
+		}
+	}
+	return true
 }
