@@ -2,28 +2,21 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/whytegod/wgd-core/core"
+	"wgd-core/core"
 )
 
 func main() {
-
 	bc := core.NewBlockchain()
 
-	tx := core.Transaction{
-		From:   "Alice",
-		To:     "Bob",
-		Amount: 50,
-	}
-
-	bc.AddTransaction(tx)
-	bc.MineBlock("WhytegodMiner")
+	bc.AddBlock("First Block")
+	bc.AddBlock("Second Block")
 
 	for _, block := range bc.Blocks {
 		fmt.Println("Index:", block.Index)
-		fmt.Println("Previous Hash:", block.PrevHash)
+		fmt.Println("Timestamp:", block.Timestamp)
+		fmt.Println("Data:", block.Data)
+		fmt.Println("PrevHash:", block.PrevHash)
 		fmt.Println("Hash:", block.Hash)
-		fmt.Println("Transactions:", block.Transactions)
-		fmt.Println("-------------------------")
+		fmt.Println("--------------------------------")
 	}
 }
