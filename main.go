@@ -1,20 +1,32 @@
-cat > main.go << 'EOF'
 package main
 
 import (
 	"fmt"
-
-	"github.com/whytegod/wgd-core/genesis"
-	"github.com/whytegod/wgd-core/ledger"
+	"github.com/whytegod/wgd-core/core"
 )
 
 func main() {
-	config := genesis.DefaultGenesis()
-	ledgerInstance := ledger.NewLedger(config.InitialSupply)
 
-	fmt.Println("Protocol:", config.ProtocolName)
-	fmt.Println("Version:", config.ProtocolVersion)
-	fmt.Println("Total Supply:", ledgerInstance.TotalSupply())
-	fmt.Println("Treasury Balance:", ledgerInstance.TreasuryBalance())
+	bc := core.NewBlockchain()
+
+	// Create a transaction
+	tx := core.Transaction{
+		From:   "Alice",
+		To:     "Bob",
+		Amount: 10,
+	}
+
+	bc.AddTransaction(tx)
+
+	// Mine block
+	bc.MineBlock("Miner1")
+
+	// Print blockchain
+	for _, block := range bc.Blocks {
+		fmt.Println("Block:", block.Index)
+		fmt.Println("Prev Hash:", block.PrevHash)
+		fmt.Println("Hash:", block.Hash)
+		fmt.Println("Transactions:", block.Transactions)
+		fmt.Println("---------------")
+	}
 }
-EOF
