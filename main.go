@@ -9,7 +9,6 @@ func main() {
 
 	bc := core.NewBlockchain()
 
-	// Create a transaction
 	tx := core.Transaction{
 		From:   "Alice",
 		To:     "Bob",
@@ -17,16 +16,13 @@ func main() {
 	}
 
 	bc.AddTransaction(tx)
-
-	// Mine block
 	bc.MineBlock("Miner1")
 
-	// Print blockchain
 	for _, block := range bc.Blocks {
 		fmt.Println("Block:", block.Index)
 		fmt.Println("Prev Hash:", block.PrevHash)
 		fmt.Println("Hash:", block.Hash)
 		fmt.Println("Transactions:", block.Transactions)
-		fmt.Println("---------------")
+		fmt.Println("--------------------")
 	}
 }
