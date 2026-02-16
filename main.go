@@ -15,8 +15,8 @@ func main() {
 		fmt.Println("Index:", block.Index)
 		fmt.Println("Timestamp:", block.Timestamp)
 		fmt.Println("Data:", block.Data)
-		fmt.Println("PrevHash:", block.PrevHash)
+		fmt.Println("Prev Hash:", block.PrevHash)
 		fmt.Println("Hash:", block.Hash)
-		fmt.Println("--------------------------------")
+		fmt.Println("----------------------------")
 	}
 }
