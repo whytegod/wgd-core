@@ -1,15 +1,17 @@
 package genesis
 
-// GenesisConfig defines the initial monetary configuration
-type GenesisConfig struct {
-	InitialSupply       float64
-	AsymptoticSupplyCap float64
+type Config struct {
+	ProtocolName    string
+	ProtocolVersion string
+	InitialSupply   uint64
+	SupplyCap       uint64
 }
 
-// DefaultGenesis returns Whytegod's platinum standard genesis configuration
-func DefaultGenesis() GenesisConfig {
-	return GenesisConfig{
-		InitialSupply:       9720000.0,  // 9.72 million WGD initial issuance
-		AsymptoticSupplyCap: 12000000.0, // 12 million asymptotic cap
+func DefaultGenesis() Config {
+	return Config{
+		ProtocolName:    "Whytegod",
+		ProtocolVersion: "v0.1.0",
+		InitialSupply:   9720000,
+		SupplyCap:       9720000,
 	}
 }
