@@ -1,18 +1,44 @@
 package core
 
-type Blockchain struct {
-	Blocks []Block
+import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"math/big"
+)
+
+type Transaction struct {
+	From      string
+	To        string
+	Amount    float64
+	Signature string
+	Hash      string
 }
 
-func NewBlockchain() *Blockchain {
-	genesisBlock := NewBlock(0, "Genesis Block", "")
-	return &Blockchain{
-		Blocks: []Block{genesisBlock},
-	}
+func (tx *Transaction) CalculateHash() string {
+	record := tx.From + tx.To + string(rune(tx.Amount))
+	hash := sha256.Sum256([]byte(record))
+	return hex.EncodeToString(hash[:])
 }
 
-func (bc *Blockchain) AddBlock(data string) {
-	prevBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(prevBlock.Index+1, data, prevBlock.Hash)
-	bc.Blocks = append(bc.Blocks, newBlock)
+func (tx *Transaction) SignTransaction(privateKey *ecdsa.PrivateKey) {
+	hash := sha256.Sum256([]byte(tx.CalculateHash()))
+
+	r, s, _ := ecdsa.Sign(rand.Reader, privateKey, hash[:])
+	signature := append(r.Bytes(), s.Bytes()...)
+	tx.Signature = hex.EncodeToString(signature)
+}
+
+func GenerateKeyPair() (*ecdsa.PrivateKey, string) {
+	privateKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+	pubKey := append(
+		privateKey.PublicKey.X.Bytes(),
+		privateKey.PublicKey.Y.Bytes()...,
+	)
+
+	address := sha256.Sum256(pubKey)
+	return privateKey, hex.EncodeToString(address[:])
 }
