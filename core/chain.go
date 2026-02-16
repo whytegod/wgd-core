@@ -1,77 +1,58 @@
 package core
 
-import (
-	"fmt"
-)
+import "fmt"
+
+type Block struct {
+	Index        int
+	Transactions []Transaction
+	PrevHash     string
+	Hash         string
+}
 
 type Blockchain struct {
-	Blocks          []Block
-	Difficulty      int
-	BlockReward     float64
-	HalvingInterval int
-	Mempool         []Transaction
+	Blocks      []Block
+	Mempool     []Transaction
+	BlockReward float64
 }
 
 func NewBlockchain() *Blockchain {
-	difficulty := 3
-
 	genesis := Block{
 		Index:        0,
-		Timestamp:    "GENESIS",
 		Transactions: []Transaction{},
-		PrevHash:     "0",
-		Nonce:        0,
+		PrevHash:     "",
+		Hash:         "genesis_hash",
 	}
-	genesis.Hash = genesis.CalculateHash()
 
 	return &Blockchain{
-		Blocks:          []Block{genesis},
-		Difficulty:      difficulty,
-		BlockReward:     50,
-		HalvingInterval: 10,
-		Mempool:         []Transaction{},
+		Blocks:      []Block{genesis},
+		Mempool:     []Transaction{},
+		BlockReward: 50,
 	}
-}
-
-func (bc *Blockchain) calculateReward() float64 {
-	halvings := len(bc.Blocks) / bc.HalvingInterval
-	reward := bc.BlockReward
-
-	for i := 0; i < halvings; i++ {
-		reward /= 2
-	}
-
-	if reward < 0.0001 {
-		reward = 0
-	}
-
-	return reward
 }
 
 func (bc *Blockchain) AddTransaction(tx Transaction) {
 	if tx.Verify() {
 		bc.Mempool = append(bc.Mempool, tx)
+	} else {
+		fmt.Println("Invalid transaction")
 	}
 }
 
 func (bc *Blockchain) MineBlock(miner string) {
-
 	rewardTx := Transaction{
-		From:   "SYSTEM",
+		From:   "network",
 		To:     miner,
-		Amount: bc.calculateReward(),
+		Amount: bc.BlockReward,
 	}
 
-	txs := append(bc.Mempool, rewardTx)
+	bc.Mempool = append(bc.Mempool, rewardTx)
 
-	prevBlock := bc.Blocks[len(bc.Blocks)-1]
-
-	newBlock := NewBlock(
-		prevBlock.Index+1,
-		txs,
-		prevBlock.Hash,
-		bc.Difficulty,
-	)
+	newBlock := Block{
+		Index:        len(bc.Blocks),
+		Transactions: bc.Mempool,
+		PrevHash:     bc.Blocks[len(bc.Blocks)-1].Hash,
+		Hash:         fmt.Sprintf("hash_%d", len(bc.Blocks)),
+	}
 
 	bc.Blocks = append(bc.Blocks, newBlock)
 	bc.Mempool = []Transaction{}
