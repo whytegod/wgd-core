@@ -1,44 +1,39 @@
 package core
 
-import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
-	"math/big"
-)
-
-type Transaction struct {
-	From      string
-	To        string
-	Amount    float64
-	Signature string
-	Hash      string
+type Blockchain struct {
+	Blocks     []Block
+	Difficulty int
+	Mempool    []Transaction
 }
 
-func (tx *Transaction) CalculateHash() string {
-	record := tx.From + tx.To + string(rune(tx.Amount))
-	hash := sha256.Sum256([]byte(record))
-	return hex.EncodeToString(hash[:])
+func NewBlockchain() *Blockchain {
+	genesis := Block{
+		Index:     0,
+		Timestamp: "Genesis",
+		Hash:      "0000genesis",
+	}
+
+	return &Blockchain{
+		Blocks:     []Block{genesis},
+		Difficulty: 3,
+		Mempool:    []Transaction{},
+	}
 }
 
-func (tx *Transaction) SignTransaction(privateKey *ecdsa.PrivateKey) {
-	hash := sha256.Sum256([]byte(tx.CalculateHash()))
-
-	r, s, _ := ecdsa.Sign(rand.Reader, privateKey, hash[:])
-	signature := append(r.Bytes(), s.Bytes()...)
-	tx.Signature = hex.EncodeToString(signature)
+func (bc *Blockchain) AddTransaction(tx Transaction) {
+	bc.Mempool = append(bc.Mempool, tx)
 }
 
-func GenerateKeyPair() (*ecdsa.PrivateKey, string) {
-	privateKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func (bc *Blockchain) MinePendingTransactions() {
+	prev := bc.Blocks[len(bc.Blocks)-1]
 
-	pubKey := append(
-		privateKey.PublicKey.X.Bytes(),
-		privateKey.PublicKey.Y.Bytes()...,
+	newBlock := NewBlock(
+		prev.Index+1,
+		bc.Mempool,
+		prev.Hash,
+		bc.Difficulty,
 	)
 
-	address := sha256.Sum256(pubKey)
-	return privateKey, hex.EncodeToString(address[:])
+	bc.Blocks = append(bc.Blocks, newBlock)
+	bc.Mempool = []Transaction{}
 }
