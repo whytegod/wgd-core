@@ -1,3 +1,4 @@
+cat > genesis/genesis.go << 'EOF'
 package genesis
 
 type Config struct {
@@ -15,3 +16,4 @@ func DefaultGenesis() Config {
 		SupplyCap:       9720000,
 	}
 }
+EOF
