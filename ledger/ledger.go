@@ -1,3 +1,4 @@
+cat > ledger/ledger.go << 'EOF'
 package ledger
 
 type Ledger struct {
@@ -19,3 +20,4 @@ func (l *Ledger) TotalSupply() uint64 {
 func (l *Ledger) TreasuryBalance() uint64 {
 	return l.treasuryBalance
 }
+EOF
