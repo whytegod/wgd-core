@@ -1,3 +1,4 @@
+cat > main.go << 'EOF'
 package main
 
 import (
@@ -16,3 +17,4 @@ func main() {
 	fmt.Println("Total Supply:", ledgerInstance.TotalSupply())
 	fmt.Println("Treasury Balance:", ledgerInstance.TreasuryBalance())
 }
+EOF
