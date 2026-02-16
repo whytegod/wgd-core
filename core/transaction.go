@@ -1,36 +1,58 @@
 package core
 
 import (
+	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/gob"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 )
 
-type Transaction struct {
-	From      string
-	To        string
-	Amount    float64
+type TXInput struct {
+	TxID      []byte
+	OutIndex  int
 	Signature []byte
 	PubKey    []byte
 }
 
-func (tx *Transaction) Hash() string {
-	record := tx.From + tx.To + fmt.Sprintf("%f", tx.Amount)
-	hash := sha256.Sum256([]byte(record))
-	return hex.EncodeToString(hash[:])
+type TXOutput struct {
+	Value      uint64
+	PubKeyHash []byte
 }
 
-func (tx *Transaction) Sign(signature []byte, pubKey []byte) {
-	tx.Signature = signature
-	tx.PubKey = pubKey
+type Transaction struct {
+	ID      []byte
+	Inputs  []TXInput
+	Outputs []TXOutput
 }
 
-func (tx *Transaction) Verify() bool {
-	return len(tx.Signature) > 0 && len(tx.PubKey) > 0
+func (tx *Transaction) Hash() []byte {
+	var encoded bytes.Buffer
+	var hash [32]byte
+
+	enc := gob.NewEncoder(&encoded)
+	_ = enc.Encode(tx)
+
+	hash = sha256.Sum256(encoded.Bytes())
+	return hash[:]
 }
 
-func (tx *Transaction) Print() {
-	fmt.Println("From:", tx.From)
-	fmt.Println("To:", tx.To)
-	fmt.Println("Amount:", tx.Amount)
+func (tx *Transaction) SetID() {
+	tx.ID = tx.Hash()
+}
+
+func NewCoinbaseTx(to string, reward uint64) *Transaction {
+	txin := TXInput{TxID: []byte{}, OutIndex: -1}
+	txout := TXOutput{Value: reward, PubKeyHash: []byte(to)}
+
+	tx := Transaction{
+		Inputs:  []TXInput{txin},
+		Outputs: []TXOutput{txout},
+	}
+	tx.SetID()
+	return &tx
 }
