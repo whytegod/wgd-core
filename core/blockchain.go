@@ -1,90 +1,95 @@
 package core
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
-// Blockchain is the in-memory representation of the chain.
+const MaxSupply = 9720000
+const HalvingInterval = 1051200
+const InitialReward = 50
+
 type Blockchain struct {
-	Blocks     []*Block
-	Mempool    []*Transaction
-	Difficulty int
+	Blocks        []*Block
+	CurrentSupply int
+	Balances      map[string]int
 }
 
-// NewBlockchain creates a chain with a genesis block.
 func NewBlockchain() *Blockchain {
-	genesis := CreateGenesisBlock()
+	genesis := NewBlock([]*Transaction{}, "0", 0)
+
 	return &Blockchain{
-		Blocks:     []*Block{genesis},
-		Mempool:    []*Transaction{},
-		Difficulty: 2, // default difficulty (tweakable)
+		Blocks:        []*Block{genesis},
+		CurrentSupply: 0,
+		Balances:      make(map[string]int),
 	}
 }
 
-// CreateGenesisBlock builds the genesis block. Adjust coinbase amount as needed.
-func CreateGenesisBlock() *Block {
-	coinbase := NewCoinbaseTx("genesis-address", 50)
-	txs := []*Transaction{coinbase}
-	return NewBlock(0, txs, []byte{}, 2)
+func (bc *Blockchain) getReward() int {
+	height := len(bc.Blocks)
+	halvings := height / HalvingInterval
+
+	reward := InitialReward
+	for i := 0; i < halvings; i++ {
+		reward /= 2
+	}
+
+	if reward <= 0 {
+		return 0
+	}
+
+	if bc.CurrentSupply+reward > MaxSupply {
+		return MaxSupply - bc.CurrentSupply
+	}
+
+	return reward
 }
 
-// AddTransaction places a transaction into mempool.
-func (bc *Blockchain) AddTransaction(tx *Transaction) {
-	if tx == nil {
-		return
-	}
-	bc.Mempool = append(bc.Mempool, tx)
-}
+func (bc *Blockchain) ValidateTransaction(tx *Transaction) bool {
 
-// AddBlock appends a block after basic validation.
-func (bc *Blockchain) AddBlock(b *Block) error {
-	if b == nil {
-		return errors.New("nil block")
-	}
-	last := bc.Blocks[len(bc.Blocks)-1]
-	// ensure index and prevhash match
-	if b.Index != last.Index+1 {
-		return fmt.Errorf("invalid index: want %d got %d", last.Index+1, b.Index)
-	}
-	if !bytesEqual(b.PrevHash, last.Hash) {
-		return fmt.Errorf("prev hash mismatch")
-	}
-	// append and done
-	bc.Blocks = append(bc.Blocks, b)
-	return nil
-}
-
-// MineBlock collects mempool txs, creates coinbase, mines block, appends to chain and clears mempool.
-func (bc *Blockchain) MineBlock(minerAddress string) (*Block, error) {
-	if minerAddress == "" {
-		return nil, fmt.Errorf("miner address required")
-	}
-	coinbase := NewCoinbaseTx(minerAddress, 50)
-	txs := []*Transaction{coinbase}
-	txs = append(txs, bc.Mempool...)
-
-	prev := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(prev.Index+1, txs, prev.Hash, bc.Difficulty)
-
-	if err := bc.AddBlock(newBlock); err != nil {
-		return nil, err
+	if tx.From == "COINBASE" {
+		return true
 	}
 
-	// clear mempool (in real chain you'd remove only included txs & handle reorgs)
-	bc.Mempool = []*Transaction{}
-	return newBlock, nil
-}
-
-// bytesEqual helper
-func bytesEqual(a, b []byte) bool {
-	if len(a) != len(b) {
+	if bc.Balances[tx.From] < tx.Amount {
 		return false
 	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
+
+	if !Verify(tx.Hash(), tx.PublicKey, tx.R, tx.S) {
+		return false
+	}
+
+	return true
+}
+
+func (bc *Blockchain) MineBlock(miner string, transactions []*Transaction) {
+
+	validTxs := []*Transaction{}
+
+	for _, tx := range transactions {
+		if bc.ValidateTransaction(tx) {
+			validTxs = append(validTxs, tx)
 		}
 	}
-	return true
+
+	reward := bc.getReward()
+	if reward > 0 {
+		coinbase := NewCoinbaseTx(miner, reward)
+		validTxs = append(validTxs, coinbase)
+		bc.CurrentSupply += reward
+		bc.Balances[miner] += reward
+	}
+
+	prev := bc.Blocks[len(bc.Blocks)-1]
+	newBlock := NewBlock(validTxs, prev.Hash, len(bc.Blocks))
+
+	bc.Blocks = append(bc.Blocks, newBlock)
+
+	for _, tx := range validTxs {
+		if tx.From != "COINBASE" {
+			bc.Balances[tx.From] -= tx.Amount
+		}
+		bc.Balances[tx.To] += tx.Amount
+	}
+
+	fmt.Printf("Block %d mined | Supply: %d\n",
+		newBlock.Index,
+		bc.CurrentSupply)
 }
