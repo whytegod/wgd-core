@@ -1,80 +1,53 @@
 package core
 
 import (
-	"bytes"
 	"crypto/sha256"
-	"encoding/gob"
-	"fmt"
-	"time"
+	"encoding/hex"
 	"strconv"
+	"strings"
+	"time"
 )
 
-// Block represents a single block in the chain.
+const Difficulty = 4
+
 type Block struct {
 	Index        int
 	Timestamp    int64
 	Transactions []*Transaction
-	PrevHash     []byte
-	Hash         []byte
+	PrevHash     string
+	Hash         string
 	Nonce        int
-	Difficulty   int
 }
 
-// NewBlock creates and returns a mined block pointer.
-func NewBlock(index int, txs []*Transaction, prevHash []byte, difficulty int) *Block {
+func NewBlock(transactions []*Transaction, prevHash string, index int) *Block {
 	block := &Block{
 		Index:        index,
 		Timestamp:    time.Now().Unix(),
-		Transactions: txs,
+		Transactions: transactions,
 		PrevHash:     prevHash,
-		Nonce:        0,
-		Difficulty:   difficulty,
 	}
-
-	block.Mine()
+	block.mine()
 	return block
 }
 
-// calculateHash produces a SHA256 hash for the block content.
-func (b *Block) calculateHash() []byte {
-	var encoded bytes.Buffer
-	enc := gob.NewEncoder(&encoded)
+func (b *Block) calculateHash() string {
+	record := strconv.Itoa(b.Index) +
+		strconv.FormatInt(b.Timestamp, 10) +
+		b.PrevHash +
+		strconv.Itoa(b.Nonce)
 
-	// encode transactions IDs only (avoid including signatures for deterministic hash)
-	txIDs := make([][]byte, 0, len(b.Transactions))
-	for _, tx := range b.Transactions {
-		if tx == nil {
-			txIDs = append(txIDs, []byte{})
-		} else {
-			txIDs = append(txIDs, tx.ID)
-		}
-	}
-
-	_ = enc.Encode(b.Index)
-	_ = enc.Encode(b.Timestamp)
-	_ = enc.Encode(txIDs)
-	_ = enc.Encode(b.PrevHash)
-	_ = enc.Encode(b.Nonce)
-	_ = enc.Encode(b.Difficulty)
-
-	sum := sha256.Sum256(encoded.Bytes())
-	return sum[:]
+	hash := sha256.Sum256([]byte(record))
+	return hex.EncodeToString(hash[:])
 }
 
-// Mine searches for a hash with a simple difficulty target (leading zeros in hex)
-func (b *Block) Mine() {
-	targetPrefix := ""
-	// difficulty expresses number of leading hex '0' nibbles required.
-	for i := 0; i < b.Difficulty; i++ {
-		targetPrefix += "0"
-	}
+func (b *Block) mine() {
+	prefix := strings.Repeat("0", Difficulty)
 
 	for {
 		hash := b.calculateHash()
-		hex := fmt.Sprintf("%x", hash)
-		if len(targetPrefix) == 0 || (len(hex) >= len(targetPrefix) && hex[:len(targetPrefix)] == targetPrefix) {
+		if strings.HasPrefix(hash, prefix) {
 			b.Hash = hash
-			return
+			break
 		}
 		b.Nonce++
 	}
