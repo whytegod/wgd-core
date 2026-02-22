@@ -2,26 +2,25 @@ package main
 
 import (
 	"fmt"
-	"wgd-core/core"
+	"github.com/whytegod/wgd-core/core"
 )
 
 func main() {
-	// create blockchain
+
 	bc := core.NewBlockchain()
 
-	// simulate adding a normal transaction (optional)
-	tx := core.NewCoinbaseTx("alice", 10)
-	bc.AddTransaction(tx)
+	miner := core.NewWallet()
+	user := core.NewWallet()
 
-	// mine block
-	block, err := bc.MineBlock("miner1")
-	if err != nil {
-		panic(err)
-	}
+	// Mine initial block for miner reward
+	bc.MineBlock(miner.Address, []*core.Transaction{})
 
-	fmt.Println("Block mined!")
-	fmt.Printf("Index: %d\n", block.Index)
-	fmt.Printf("Hash: %x\n", block.Hash)
-	fmt.Printf("PrevHash: %x\n", block.PrevHash)
-	fmt.Printf("Transactions: %d\n", len(block.Transactions))
+	// Miner sends coins to user
+	tx := core.NewTransaction(miner, user.Address, 10)
+
+	bc.MineBlock(miner.Address, []*core.Transaction{tx})
+
+	fmt.Println("Miner Balance:", bc.Balances[miner.Address])
+	fmt.Println("User Balance:", bc.Balances[user.Address])
+	fmt.Println("Total Supply:", bc.CurrentSupply)
 }
