@@ -9,12 +9,18 @@ func (u *UTXOSet) ApplyBlock(txs []*tx.Transaction) (*BlockUndo, error) {
 
 	undo := &BlockUndo{}
 
-	for _, tx := range txs {
+	for _, transaction := range txs {
+
+		txHash := transaction.Hash()
 
 		// Spend inputs
-		for _, in := range tx.Inputs {
+		for _, in := range transaction.Inputs {
 
-			key := in.PrevTxHash
+			key := UTXOKey{
+				TxHash: in.PrevTxHash,
+				Index:  in.OutputIndex,
+			}
+
 			value, exists := u.Get(key)
 			if !exists {
 				return nil, errors.New("utxo not found")
@@ -29,10 +35,14 @@ func (u *UTXOSet) ApplyBlock(txs []*tx.Transaction) (*BlockUndo, error) {
 		}
 
 		// Add outputs
-		for i, out := range tx.Outputs {
+		for i, out := range transaction.Outputs {
 
-			newKey := tx.OutputKey(i)
-			u.Put(newKey, out.Serialize())
+			newKey := UTXOKey{
+				TxHash: txHash,
+				Index:  uint32(i),
+			}
+
+			u.Put(newKey, out)
 		}
 	}
 
