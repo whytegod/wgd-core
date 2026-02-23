@@ -1,11 +1,18 @@
 package ledger
 
+import "wgd-core/internal/tx"
+
 func (u *UTXOSet) RollbackBlock(txs []*tx.Transaction, undo *BlockUndo) {
 
-	// Remove created outputs
-	for _, tx := range txs {
-		for i := range tx.Outputs {
-			key := tx.OutputKey(i)
+	// Remove newly created outputs
+	for _, transaction := range txs {
+		txHash := transaction.Hash()
+
+		for i := range transaction.Outputs {
+			key := UTXOKey{
+				TxHash: txHash,
+				Index:  uint32(i),
+			}
 			u.Delete(key)
 		}
 	}
