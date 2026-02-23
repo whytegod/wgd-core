@@ -11,38 +11,34 @@ type UTXOKey struct {
 }
 
 type UTXOSet struct {
-	mu sync.RWMutex
-	set map[UTXOKey]tx.TxOutput
+	mu    sync.RWMutex
+	store map[UTXOKey]tx.TxOutput
 }
 
 func NewUTXOSet() *UTXOSet {
 	return &UTXOSet{
-		set: make(map[UTXOKey]tx.TxOutput),
+		store: make(map[UTXOKey]tx.TxOutput),
 	}
 }
 
-func (u *UTXOSet) Add(txHash [32]byte, index uint32, output tx.TxOutput) {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-	u.set[UTXOKey{txHash, index}] = output
-}
-
-func (u *UTXOSet) Spend(txHash [32]byte, index uint32) bool {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-
-	key := UTXOKey{txHash, index}
-	if _, exists := u.set[key]; !exists {
-		return false
-	}
-	delete(u.set, key)
-	return true
-}
-
-func (u *UTXOSet) Get(txHash [32]byte, index uint32) (tx.TxOutput, bool) {
+func (u *UTXOSet) Get(key UTXOKey) (tx.TxOutput, bool) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
-	out, ok := u.set[UTXOKey{txHash, index}]
-	return out, ok
+	val, ok := u.store[key]
+	return val, ok
+}
+
+func (u *UTXOSet) Put(key UTXOKey, out tx.TxOutput) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	u.store[key] = out
+}
+
+func (u *UTXOSet) Delete(key UTXOKey) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	delete(u.store, key)
 }
