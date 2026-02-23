@@ -5,11 +5,11 @@ import (
 	"log"
 	"time"
 
-	"wgd-core/internal/block"
-	"wgd-core/internal/core"
-	"wgd-core/internal/economics"
-	"wgd-core/internal/genesis"
-	"wgd-core/internal/ledger"
+	"github.com/whytegod/wgd-core/internal/block"
+	"github.com/whytegod/wgd-core/internal/core"
+	"github.com/whytegod/wgd-core/internal/economics"
+	"github.com/whytegod/wgd-core/internal/genesis"
+	"github.com/whytegod/wgd-core/internal/ledger"
 )
 
 func main() {
