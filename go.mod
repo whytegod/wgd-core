@@ -1,3 +1,3 @@
-module werts
+module wgd-core
 
 go 1.21
