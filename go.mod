@@ -1,3 +1,3 @@
-module github.com/whyt egod/wgd-core
+module werts
 
 go 1.21
