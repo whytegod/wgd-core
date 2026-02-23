@@ -14,87 +14,98 @@ import (
 
 func main() {
 
-	fmt.Println("======================================")
-	fmt.Println("      WGD CORE BLOCKCHAIN NODE       ")
-	fmt.Println("======================================")
+	fmt.Println("====================================")
+	fmt.Println("        WGD CORE — Digital Platinum")
+	fmt.Println("====================================")
 
-	// --------------------------------------------------
-	// 1. Initialize Ledger (State)
-	// --------------------------------------------------
-	state := ledger.NewLedger()
-
-	fmt.Println("[✓] Ledger initialized")
-
-	// --------------------------------------------------
-	// 2. Load Genesis Configuration
-	// --------------------------------------------------
-	genesisConfig := genesis.DefaultGenesis()
-
-	err := genesis.ApplyGenesis(state, genesisConfig)
-	if err != nil {
-		log.Fatalf("Genesis initialization failed: %v", err)
+	//-----------------------------------
+	// 1️⃣ Initialize Ledger
+	//-----------------------------------
+	ledgerState := ledger.NewLedger()
+	if ledgerState == nil {
+		log.Fatal("Failed to initialize ledger")
 	}
 
-	fmt.Println("[✓] Genesis block applied")
+	//-----------------------------------
+	// 2️⃣ Apply Genesis Block
+	//-----------------------------------
+	genesisConfig := genesis.DefaultGenesis()
 
-	// --------------------------------------------------
-	// 3. Initialize Economics Engine
-	// --------------------------------------------------
-	econ := economics.NewEconomicsEngine(
-		economics.Config{
-			MaxSupply:        21_000_000,
-			BlockReward:      50,
-			HalvingInterval:  100,
-			InitialSupply:    genesisConfig.InitialSupply,
-		},
-	)
+	err := genesis.ApplyGenesis(ledgerState, genesisConfig)
+	if err != nil {
+		log.Fatalf("Genesis failed: %v", err)
+	}
 
-	fmt.Println("[✓] Economics engine loaded")
+	fmt.Println("Genesis applied successfully")
 
-	// --------------------------------------------------
-	// 4. Initialize Blockchain Core
-	// --------------------------------------------------
-	chain := core.NewBlockchain(state, econ)
+	//-----------------------------------
+	// 3️⃣ Initialize Economics Engine
+	//-----------------------------------
+	econConfig := economics.Config{
+		MaxSupply:       9_720_000,
+		BlockReward:     50,
+		HalvingInterval: 730, // 2 years example
+		InitialSupply:   genesisConfig.InitialSupply,
+	}
 
-	fmt.Println("[✓] Blockchain core started")
+	econ := economics.NewEconomicsEngine(econConfig)
+	if econ == nil {
+		log.Fatal("Failed to initialize economics engine")
+	}
 
-	// --------------------------------------------------
-	// 5. Simulate Block Production
-	// --------------------------------------------------
+	//-----------------------------------
+	// 4️⃣ Initialize Blockchain Core
+	//-----------------------------------
+	chain := core.NewBlockchain(ledgerState, econ)
+	if chain == nil {
+		log.Fatal("Failed to initialize blockchain")
+	}
 
-	for i := 0; i < 5; i++ {
+	fmt.Println("Blockchain initialized")
 
-		fmt.Printf("\n⛏ Mining block %d...\n", i+1)
+	//-----------------------------------
+	// 5️⃣ Simulate Mining 3 Blocks
+	//-----------------------------------
+	for i := 0; i < 3; i++ {
 
+		fmt.Printf("\nMining block %d...\n", i+1)
+
+		// Get last block hash
+		prevHash := chain.LastBlockHash()
+
+		// Create block
 		newBlock, err := block.CreateBlock(
-			chain.LastBlockHash(),
-			state.PendingTransactions(),
+			prevHash,
+			nil, // No transactions for now
 			time.Now(),
 		)
-
 		if err != nil {
 			log.Fatalf("Block creation failed: %v", err)
 		}
 
+		// Add block to chain
 		err = chain.AddBlock(newBlock)
 		if err != nil {
-			log.Fatalf("Block rejected: %v", err)
+			log.Fatalf("Failed to add block: %v", err)
+		}
+
+		// Apply block reward
+		reward := econ.CalculateReward(chain.Height())
+		err = ledgerState.ApplyMiningReward(reward)
+		if err != nil {
+			log.Fatalf("Failed to apply reward: %v", err)
 		}
 
 		fmt.Printf("Block %d added successfully\n", newBlock.Height)
-		fmt.Printf("Current Supply: %d\n", econ.CurrentSupply())
+		fmt.Printf("Current Supply: %.2f\n", econ.CurrentSupply())
 	}
 
-	// --------------------------------------------------
-	// 6. Final Chain Summary
-	// --------------------------------------------------
-
-	fmt.Println("\n======================================")
-	fmt.Println("CHAIN SUMMARY")
-	fmt.Println("======================================")
-
-	fmt.Printf("Total Blocks: %d\n", chain.Height())
-	fmt.Printf("Final Supply: %d\n", econ.CurrentSupply())
-
-	fmt.Println("Node shutting down cleanly...")
+	//-----------------------------------
+	// 6️⃣ Final Chain Status
+	//-----------------------------------
+	fmt.Println("\n====================================")
+	fmt.Println("Blockchain Height:", chain.Height())
+	fmt.Printf("Total Supply: %.2f\n", econ.CurrentSupply())
+	fmt.Println("System running correctly ✅")
+	fmt.Println("====================================")
 }
