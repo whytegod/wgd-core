@@ -1,3 +1,3 @@
-module github.com/whytegod/wgd-core
+module github.com/whyt egod/wgd-core
 
 go 1.21
