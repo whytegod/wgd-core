@@ -1,8 +1,10 @@
 package ledger
 
+import "wgd-core/internal/tx"
+
 type UndoEntry struct {
-	Key   [32]byte
-	Value []byte
+	Key   UTXOKey
+	Value tx.TxOutput
 }
 
 type BlockUndo struct {
