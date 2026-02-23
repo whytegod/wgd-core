@@ -21,7 +21,7 @@ func main() {
 	//-----------------------------------
 	// 1️⃣ Initialize Ledger
 	//-----------------------------------
-	ledgerState := ledger.NewLedger()
+	ledgerState := ledger.NewUTXOSet()
 	if ledgerState == nil {
 		log.Fatal("Failed to initialize ledger")
 	}
@@ -87,13 +87,14 @@ func main() {
 		}
 
 		reward := econ.CalculateReward(chain.Height())
+
 		err = ledgerState.ApplyMiningReward(reward)
 		if err != nil {
 			log.Fatalf("Failed to apply reward: %v", err)
 		}
 
 		fmt.Printf("Block %d added successfully\n", newBlock.Height)
-		fmt.Printf("Current Supply: %.2f\n", econ.CurrentSupply())
+		fmt.Printf("Current Supply: %d\n", econ.CurrentSupply())
 	}
 
 	//-----------------------------------
@@ -101,7 +102,7 @@ func main() {
 	//-----------------------------------
 	fmt.Println("\n====================================")
 	fmt.Println("Blockchain Height:", chain.Height())
-	fmt.Printf("Total Supply: %.2f\n", econ.CurrentSupply())
+	fmt.Printf("Total Supply: %d\n", econ.CurrentSupply())
 	fmt.Println("System running correctly ✅")
 	fmt.Println("====================================")
 }
