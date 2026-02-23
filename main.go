@@ -5,11 +5,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/whytegod/wgd-core/block"
-	"github.com/whytegod/wgd-core/core"
-	"github.com/whytegod/wgd-core/economics"
-	"github.com/whytegod/wgd-core/genesis"
-	"github.com/whytegod/wgd-core/ledger"
+	"wgd-core/internal/block"
+	"wgd-core/internal/core"
+	"wgd-core/internal/economics"
+	"wgd-core/internal/genesis"
+	"wgd-core/internal/ledger"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 	econConfig := economics.Config{
 		MaxSupply:       9_720_000,
 		BlockReward:     50,
-		HalvingInterval: 730, // 2 years example
+		HalvingInterval: 730,
 		InitialSupply:   genesisConfig.InitialSupply,
 	}
 
@@ -70,26 +70,22 @@ func main() {
 
 		fmt.Printf("\nMining block %d...\n", i+1)
 
-		// Get last block hash
 		prevHash := chain.LastBlockHash()
 
-		// Create block
 		newBlock, err := block.CreateBlock(
 			prevHash,
-			nil, // No transactions for now
+			nil,
 			time.Now(),
 		)
 		if err != nil {
 			log.Fatalf("Block creation failed: %v", err)
 		}
 
-		// Add block to chain
 		err = chain.AddBlock(newBlock)
 		if err != nil {
 			log.Fatalf("Failed to add block: %v", err)
 		}
 
-		// Apply block reward
 		reward := econ.CalculateReward(chain.Height())
 		err = ledgerState.ApplyMiningReward(reward)
 		if err != nil {
